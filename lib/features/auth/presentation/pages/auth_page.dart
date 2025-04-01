@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
+import '../../../../core/theme/app_colors.dart';
 
 class AuthPage extends StatefulWidget {
   const AuthPage({super.key});
@@ -105,10 +106,14 @@ class _AuthPageState extends State<AuthPage>
             height: 100,
             width: 100,
             decoration: BoxDecoration(
-              color: Colors.blue.withOpacity(0.1),
+              color: AppColors.primaryColor.withOpacity(0.1),
               shape: BoxShape.circle,
             ),
-            child: const Icon(Icons.home_rounded, size: 50, color: Colors.blue),
+            child: Icon(
+              Icons.home_rounded,
+              size: 50,
+              color: AppColors.primaryColor,
+            ),
           ),
         ),
         const SizedBox(height: 24),
@@ -117,7 +122,7 @@ class _AuthPageState extends State<AuthPage>
           style: TextStyle(
             fontSize: 28,
             fontWeight: FontWeight.bold,
-            color: CupertinoColors.label.resolveFrom(context),
+            color: AppColors.textPrimaryColor,
           ),
         ),
       ],
@@ -132,12 +137,14 @@ class _AuthPageState extends State<AuthPage>
   }) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.grey[100],
+        color: AppColors.inputBackgroundColor,
         borderRadius: BorderRadius.circular(16),
       ),
       child: CupertinoTextField(
         controller: controller,
         placeholder: placeholder,
+        placeholderStyle: TextStyle(color: AppColors.textHintColor),
+        style: TextStyle(color: AppColors.textPrimaryColor),
         prefix: Padding(
           padding: const EdgeInsets.only(left: 12),
           child: Icon(icon, color: Colors.grey[600], size: 20),
@@ -182,27 +189,38 @@ class _AuthPageState extends State<AuthPage>
           isPassword: true,
         ),
         const SizedBox(height: 12),
-        CupertinoButton(
-          padding: EdgeInsets.zero,
+        TextButton(
           child: Text(
             'Mot de passe oublié ?',
-            style: TextStyle(
-              color: CupertinoColors.systemBlue.resolveFrom(context),
-            ),
+            style: TextStyle(color: AppColors.textPrimaryColor),
           ),
           onPressed: () {},
         ),
         const SizedBox(height: 24),
         SizedBox(
           width: double.infinity,
-          child: CupertinoButton.filled(
-            borderRadius: BorderRadius.circular(16),
+          child: ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primaryColor,
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+            ),
             child:
                 _isLoading
-                    ? const CupertinoActivityIndicator(
-                      color: CupertinoColors.white,
+                    ? const SizedBox(
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(
+                        color: Colors.white,
+                        strokeWidth: 2,
+                      ),
                     )
-                    : const Text('Se connecter'),
+                    : const Text(
+                      'Se connecter',
+                      style: TextStyle(color: Colors.white),
+                    ),
             onPressed: _isLoading ? null : _handleSignIn,
           ),
         ),
