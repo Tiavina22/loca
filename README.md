@@ -1,3 +1,2 @@
 # loca
-
-A new Flutter project.
+Loca est une application de moteur de recherche des laoka. Particulièrement pour les Malgaches.
