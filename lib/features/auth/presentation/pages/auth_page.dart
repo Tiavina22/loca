@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 
 class AuthPage extends StatefulWidget {
   const AuthPage({super.key});
@@ -7,15 +8,43 @@ class AuthPage extends StatefulWidget {
   State<AuthPage> createState() => _AuthPageState();
 }
 
-class _AuthPageState extends State<AuthPage> {
+class _AuthPageState extends State<AuthPage>
+    with SingleTickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isPasswordVisible = false;
   bool _isLoading = false;
 
+  late AnimationController _animationController;
+  late Animation<double> _fadeAnimation;
+  late Animation<Offset> _slideAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 800),
+    );
+
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeOut),
+    );
+
+    _slideAnimation = Tween<Offset>(
+      begin: const Offset(0, 0.1),
+      end: Offset.zero,
+    ).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeOut),
+    );
+
+    _animationController.forward();
+  }
+
   @override
   void dispose() {
+    _animationController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
@@ -33,208 +62,201 @@ class _AuthPageState extends State<AuthPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: CupertinoColors.systemBackground,
       body: SafeArea(
-        child: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.all(24.0),
-            child: Column(
-              children: [
-                const SizedBox(height: 40),
-                // Header
-                Hero(
-                  tag: 'logo',
-                  child: Container(
-                    height: 120,
-                    width: 120,
-                    decoration: BoxDecoration(
-                      color: Colors.blue[100],
-                      shape: BoxShape.circle,
+        child: CustomScrollView(
+          physics: const BouncingScrollPhysics(),
+          slivers: [
+            SliverFillRemaining(
+              hasScrollBody: false,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: FadeTransition(
+                  opacity: _fadeAnimation,
+                  child: SlideTransition(
+                    position: _slideAnimation,
+                    child: Column(
+                      children: [
+                        const SizedBox(height: 60),
+                        _buildHeader(),
+                        const SizedBox(height: 40),
+                        _buildForm(),
+                        const Spacer(),
+                        _buildBottomSection(),
+                        const SizedBox(height: 20),
+                      ],
                     ),
-                    child: const Icon(
-                      Icons.restaurant_menu,
-                      size: 60,
-                      color: Colors.blue,
-                    ),
                   ),
                 ),
-                const SizedBox(height: 30),
-                Text(
-                  'Bienvenue sur Loca',
-                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.blue[800],
-                  ),
-                ),
-                const SizedBox(height: 10),
-                Text(
-                  'Connectez-vous pour continuer',
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodyLarge?.copyWith(color: Colors.grey[600]),
-                ),
-                const SizedBox(height: 40),
-                // Form
-                Form(
-                  key: _formKey,
-                  child: Column(
-                    children: [
-                      _buildTextField(
-                        controller: _emailController,
-                        label: 'Email',
-                        icon: Icons.email_outlined,
-                        validator: (value) {
-                          if (value == null || !value.contains('@')) {
-                            return 'Veuillez entrer un email valide';
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 20),
-                      _buildTextField(
-                        controller: _passwordController,
-                        label: 'Mot de passe',
-                        icon: Icons.lock_outline,
-                        isPassword: true,
-                        isPasswordVisible: _isPasswordVisible,
-                        onTogglePassword: () {
-                          setState(
-                            () => _isPasswordVisible = !_isPasswordVisible,
-                          );
-                        },
-                        validator: (value) {
-                          if (value == null || value.length < 6) {
-                            return 'Le mot de passe doit contenir au moins 6 caractères';
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 12),
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: TextButton(
-                          onPressed: () {},
-                          child: Text(
-                            'Mot de passe oublié ?',
-                            style: TextStyle(color: Colors.blue[700]),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-                      _buildSignInButton(),
-                      const SizedBox(height: 20),
-                      _buildDivider(),
-                      const SizedBox(height: 20),
-                      _buildGoogleSignInButton(),
-                    ],
-                  ),
-                ),
-              ],
+              ),
             ),
-          ),
+          ],
         ),
       ),
+    );
+  }
+
+  Widget _buildHeader() {
+    return Column(
+      children: [
+        Hero(
+          tag: 'logo',
+          child: Container(
+            height: 100,
+            width: 100,
+            decoration: BoxDecoration(
+              color: Colors.blue.withOpacity(0.1),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(Icons.home_rounded, size: 50, color: Colors.blue),
+          ),
+        ),
+        const SizedBox(height: 24),
+        Text(
+          'Bienvenue sur Loca',
+          style: TextStyle(
+            fontSize: 28,
+            fontWeight: FontWeight.bold,
+            color: CupertinoColors.label.resolveFrom(context),
+          ),
+        ),
+      ],
     );
   }
 
   Widget _buildTextField({
     required TextEditingController controller,
-    required String label,
+    required String placeholder,
     required IconData icon,
     bool isPassword = false,
-    bool? isPasswordVisible,
-    VoidCallback? onTogglePassword,
-    String? Function(String?)? validator,
   }) {
-    return TextFormField(
-      controller: controller,
-      obscureText: isPassword && !(_isPasswordVisible),
-      decoration: InputDecoration(
-        labelText: label,
-        prefixIcon: Icon(icon, color: Colors.blue[700]),
-        suffixIcon:
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.grey[100],
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: CupertinoTextField(
+        controller: controller,
+        placeholder: placeholder,
+        prefix: Padding(
+          padding: const EdgeInsets.only(left: 12),
+          child: Icon(icon, color: Colors.grey[600], size: 20),
+        ),
+        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
+        decoration: null,
+        obscureText: isPassword && !_isPasswordVisible,
+        suffix:
             isPassword
                 ? IconButton(
+                  padding: const EdgeInsets.only(right: 12),
                   icon: Icon(
                     _isPasswordVisible
                         ? Icons.visibility_off
                         : Icons.visibility,
                     color: Colors.grey[600],
+                    size: 20,
                   ),
-                  onPressed: onTogglePassword,
+                  onPressed:
+                      () => setState(
+                        () => _isPasswordVisible = !_isPasswordVisible,
+                      ),
                 )
                 : null,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey[300]!),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey[300]!),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.blue[700]!),
-        ),
       ),
-      validator: validator,
     );
   }
 
-  Widget _buildSignInButton() {
-    return ElevatedButton(
-      onPressed: _isLoading ? null : _handleSignIn,
-      style: ElevatedButton.styleFrom(
-        backgroundColor: Colors.blue[700],
-        minimumSize: const Size(double.infinity, 50),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      ),
-      child:
-          _isLoading
-              ? const SizedBox(
-                height: 20,
-                width: 20,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                ),
-              )
-              : const Text(
-                'Se connecter',
-                style: TextStyle(fontSize: 16, color: Colors.white),
-              ),
-    );
-  }
-
-  Widget _buildDivider() {
-    return Row(
+  Widget _buildForm() {
+    return Column(
       children: [
-        Expanded(child: Divider(color: Colors.grey[400])),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Text('OU', style: TextStyle(color: Colors.grey[600])),
+        _buildTextField(
+          controller: _emailController,
+          placeholder: 'Email',
+          icon: Icons.email_outlined,
         ),
-        Expanded(child: Divider(color: Colors.grey[400])),
+        const SizedBox(height: 16),
+        _buildTextField(
+          controller: _passwordController,
+          placeholder: 'Mot de passe',
+          icon: Icons.lock_outline,
+          isPassword: true,
+        ),
+        const SizedBox(height: 12),
+        CupertinoButton(
+          padding: EdgeInsets.zero,
+          child: Text(
+            'Mot de passe oublié ?',
+            style: TextStyle(
+              color: CupertinoColors.systemBlue.resolveFrom(context),
+            ),
+          ),
+          onPressed: () {},
+        ),
+        const SizedBox(height: 24),
+        SizedBox(
+          width: double.infinity,
+          child: CupertinoButton.filled(
+            borderRadius: BorderRadius.circular(16),
+            child:
+                _isLoading
+                    ? const CupertinoActivityIndicator(
+                      color: CupertinoColors.white,
+                    )
+                    : const Text('Se connecter'),
+            onPressed: _isLoading ? null : _handleSignIn,
+          ),
+        ),
       ],
     );
   }
 
-  Widget _buildGoogleSignInButton() {
-    return OutlinedButton(
-      onPressed: () {},
-      style: OutlinedButton.styleFrom(
-        minimumSize: const Size(double.infinity, 50),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        side: BorderSide(color: Colors.grey[300]!),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Image.asset('assets/images/logos/logo-google.png', height: 24),
-          const SizedBox(width: 12),
-          const Text('Continuer avec Google'),
-        ],
-      ),
+  Widget _buildBottomSection() {
+    return Column(
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: Divider(
+                color: CupertinoColors.systemGrey4.resolveFrom(context),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Text(
+                'ou',
+                style: TextStyle(
+                  color: CupertinoColors.systemGrey.resolveFrom(context),
+                ),
+              ),
+            ),
+            Expanded(
+              child: Divider(
+                color: CupertinoColors.systemGrey4.resolveFrom(context),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 20),
+        CupertinoButton(
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          color: CupertinoColors.systemGrey6.resolveFrom(context),
+          borderRadius: BorderRadius.circular(16),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Image.asset('assets/images/logos/logo-google.png', height: 24),
+              const SizedBox(width: 12),
+              Text(
+                'Continuer avec Google',
+                style: TextStyle(
+                  color: CupertinoColors.label.resolveFrom(context),
+                ),
+              ),
+            ],
+          ),
+          onPressed: () {},
+        ),
+      ],
     );
   }
 }
