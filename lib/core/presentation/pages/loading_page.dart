@@ -15,7 +15,7 @@ class _LoadingPageState extends State<LoadingPage> {
   void initState() {
     super.initState();
     Timer(const Duration(seconds: 3), () {
-      Navigator.of(context).pushReplacementNamed(AppRouter.home);
+      Navigator.of(context).pushReplacementNamed(AppRouter.auth);
     });
   }
 
