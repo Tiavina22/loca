@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
 import '../../../core/routes/app_router.dart';
+import '../widgets/boiling_pot_animation.dart';
 
 class LoadingPage extends StatefulWidget {
   const LoadingPage({super.key});
@@ -25,9 +26,12 @@ class _LoadingPageState extends State<LoadingPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            CircularProgressIndicator(),
+            BoilingPotAnimation(),
             SizedBox(height: 20),
-            Text('Loading...', style: TextStyle(fontSize: 16)),
+            Text(
+              'Préparation en cours...',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+            ),
           ],
         ),
       ),
