@@ -100,23 +100,7 @@ class _AuthPageState extends State<AuthPage>
   Widget _buildHeader() {
     return Column(
       children: [
-        Hero(
-          tag: 'logo',
-          child: Container(
-            height: 100,
-            width: 100,
-            decoration: BoxDecoration(
-              color: AppColors.primaryColor.withOpacity(0.1),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              Icons.home_rounded,
-              size: 50,
-              color: AppColors.primaryColor,
-            ),
-          ),
-        ),
-        const SizedBox(height: 24),
+        const SizedBox(height: 74),
         Text(
           'Bienvenue sur Loca',
           style: TextStyle(
