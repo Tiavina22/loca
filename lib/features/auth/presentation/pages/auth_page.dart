@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:loca/core/routes/app_router.dart';
 import '../../../../core/theme/app_colors.dart';
 
 class AuthPage extends StatefulWidget {
@@ -206,6 +207,14 @@ class _AuthPageState extends State<AuthPage>
                       style: TextStyle(color: Colors.white),
                     ),
             onPressed: _isLoading ? null : _handleSignIn,
+          ),
+        ),
+        const SizedBox(height: 16),
+        TextButton(
+          onPressed: () => Navigator.pushNamed(context, AppRouter.register),
+          child: Text(
+            'Pas encore de compte ? S\'inscrire',
+            style: TextStyle(color: AppColors.primaryColor),
           ),
         ),
       ],
