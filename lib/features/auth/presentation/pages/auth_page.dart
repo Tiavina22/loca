@@ -55,9 +55,29 @@ class _AuthPageState extends State<AuthPage>
   Future<void> _handleSignIn() async {
     if (_formKey.currentState!.validate()) {
       setState(() => _isLoading = true);
-      await Future.delayed(const Duration(seconds: 2)); // Simuler un chargement
+
+      // Simulation d'une connexion
+      await Future.delayed(const Duration(seconds: 2));
+
+      // Vérification simple des identifiants (à remplacer par une vraie auth)
+      if (_emailController.text == "test@test.com" &&
+          _passwordController.text == "password123") {
+        // Redirection vers la page d'accueil
+        if (mounted) {
+          Navigator.of(context).pushReplacementNamed(AppRouter.home);
+        }
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Email ou mot de passe incorrect'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+
       setState(() => _isLoading = false);
-      // TODO: Implémenter la vraie logique de connexion
     }
   }
 
@@ -119,105 +139,131 @@ class _AuthPageState extends State<AuthPage>
     required String placeholder,
     required IconData icon,
     bool isPassword = false,
+    String? Function(String?)? validator,
   }) {
     return Container(
       decoration: BoxDecoration(
         color: AppColors.inputBackgroundColor,
         borderRadius: BorderRadius.circular(16),
       ),
-      child: CupertinoTextField(
+      child: TextFormField(
         controller: controller,
-        placeholder: placeholder,
-        placeholderStyle: TextStyle(color: AppColors.textHintColor),
-        style: TextStyle(color: AppColors.textPrimaryColor),
-        prefix: Padding(
-          padding: const EdgeInsets.only(left: 12),
-          child: Icon(icon, color: Colors.grey[600], size: 20),
+        validator: validator,
+        decoration: InputDecoration(
+          hintText: placeholder,
+          hintStyle: TextStyle(color: AppColors.textHintColor),
+          prefixIcon: Icon(icon, color: Colors.grey[600], size: 20),
+          suffixIcon:
+              isPassword
+                  ? IconButton(
+                    icon: Icon(
+                      _isPasswordVisible
+                          ? Icons.visibility_off
+                          : Icons.visibility,
+                      color: Colors.grey[600],
+                      size: 20,
+                    ),
+                    onPressed:
+                        () => setState(
+                          () => _isPasswordVisible = !_isPasswordVisible,
+                        ),
+                  )
+                  : null,
+          border: InputBorder.none,
+          enabledBorder: InputBorder.none,
+          focusedBorder: InputBorder.none,
+          contentPadding: const EdgeInsets.symmetric(
+            vertical: 16,
+            horizontal: 8,
+          ),
         ),
-        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
-        decoration: null,
         obscureText: isPassword && !_isPasswordVisible,
-        suffix:
-            isPassword
-                ? IconButton(
-                  padding: const EdgeInsets.only(right: 12),
-                  icon: Icon(
-                    _isPasswordVisible
-                        ? Icons.visibility_off
-                        : Icons.visibility,
-                    color: Colors.grey[600],
-                    size: 20,
-                  ),
-                  onPressed:
-                      () => setState(
-                        () => _isPasswordVisible = !_isPasswordVisible,
-                      ),
-                )
-                : null,
+        style: TextStyle(color: AppColors.textPrimaryColor),
       ),
     );
   }
 
   Widget _buildForm() {
-    return Column(
-      children: [
-        _buildTextField(
-          controller: _emailController,
-          placeholder: 'Email',
-          icon: Icons.email_outlined,
-        ),
-        const SizedBox(height: 16),
-        _buildTextField(
-          controller: _passwordController,
-          placeholder: 'Mot de passe',
-          icon: Icons.lock_outline,
-          isPassword: true,
-        ),
-        const SizedBox(height: 12),
-        TextButton(
-          child: Text(
-            'Mot de passe oublié ?',
-            style: TextStyle(color: AppColors.textPrimaryColor),
+    return Form(
+      key: _formKey,
+      child: Column(
+        children: [
+          _buildTextField(
+            controller: _emailController,
+            placeholder: 'Email',
+            icon: Icons.email_outlined,
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'Veuillez entrer votre email';
+              }
+              if (!value.contains('@')) {
+                return 'Veuillez entrer un email valide';
+              }
+              return null;
+            },
           ),
-          onPressed: () {},
-        ),
-        const SizedBox(height: 24),
-        SizedBox(
-          width: double.infinity,
-          child: ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primaryColor,
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
+          const SizedBox(height: 16),
+          _buildTextField(
+            controller: _passwordController,
+            placeholder: 'Mot de passe',
+            icon: Icons.lock_outline,
+            isPassword: true,
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'Veuillez entrer votre mot de passe';
+              }
+              if (value.length < 6) {
+                return 'Le mot de passe doit contenir au moins 6 caractères';
+              }
+              return null;
+            },
+          ),
+          const SizedBox(height: 12),
+          TextButton(
+            child: Text(
+              'Mot de passe oublié ?',
+              style: TextStyle(color: AppColors.textPrimaryColor),
             ),
-            child:
-                _isLoading
-                    ? const SizedBox(
-                      height: 20,
-                      width: 20,
-                      child: CircularProgressIndicator(
-                        color: Colors.white,
-                        strokeWidth: 2,
+            onPressed: () {},
+          ),
+          const SizedBox(height: 24),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primaryColor,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+              ),
+              child:
+                  _isLoading
+                      ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(
+                          color: Colors.white,
+                          strokeWidth: 2,
+                        ),
+                      )
+                      : const Text(
+                        'Se connecter',
+                        style: TextStyle(color: Colors.white),
                       ),
-                    )
-                    : const Text(
-                      'Se connecter',
-                      style: TextStyle(color: Colors.white),
-                    ),
-            onPressed: _isLoading ? null : _handleSignIn,
+              onPressed: _isLoading ? null : _handleSignIn,
+            ),
           ),
-        ),
-        const SizedBox(height: 16),
-        TextButton(
-          onPressed: () => Navigator.pushNamed(context, AppRouter.register),
-          child: Text(
-            'Pas encore de compte ? S\'inscrire',
-            style: TextStyle(color: AppColors.primaryColor),
+          const SizedBox(height: 16),
+          TextButton(
+            onPressed: () => Navigator.pushNamed(context, AppRouter.register),
+            child: Text(
+              'Pas encore de compte ? S\'inscrire',
+              style: TextStyle(color: AppColors.primaryColor),
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
