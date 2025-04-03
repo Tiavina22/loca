@@ -12,64 +12,39 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   int _currentIndex = 0;
+  final ScrollController _scrollController = ScrollController();
+  bool _showScrollToTop = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_scrollListener);
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _scrollListener() {
+    if (_scrollController.offset >= 400) {
+      if (!_showScrollToTop) setState(() => _showScrollToTop = true);
+    } else {
+      if (_showScrollToTop) setState(() => _showScrollToTop = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        automaticallyImplyLeading: false,
-        title: const Text(
-          'Loca',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 28,
-            fontFamily: 'serif',
-            color: Colors.black,
-          ),
-        ),
-        centerTitle: false,
-        backgroundColor: Colors.white,
-        elevation: 0.5,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.search, color: Colors.black87),
-            onPressed: () {},
-          ),
-          IconButton(
-            icon: const Icon(
-              Icons.notifications_outlined,
-              color: Colors.black87,
-            ),
-            onPressed: () {},
-          ),
-          PopupMenuButton<String>(
-            onSelected: (value) {
-              if (value == 'logout') {
-                Navigator.of(context).pushReplacementNamed(AppRouter.auth);
-              }
-            },
-            itemBuilder:
-                (context) => [
-                  const PopupMenuItem(
-                    value: 'logout',
-                    child: Row(
-                      children: [
-                        Icon(Icons.logout, color: Colors.grey),
-                        SizedBox(width: 8),
-                        Text('Déconnexion'),
-                      ],
-                    ),
-                  ),
-                ],
-          ),
-        ],
-      ),
+      appBar: _buildAppBar(),
       body: IndexedStack(
         index: _currentIndex,
         children: [
           _buildHomeContent(),
-          const Center(child: Text('Publier un Laoka')),
-          const Center(child: Text('Paramètres')),
+          _buildPublishContent(),
+          _buildSettingsContent(),
         ],
       ),
       bottomNavigationBar: NavigationBar(
@@ -97,28 +72,220 @@ class _HomePageState extends State<HomePage> {
           ),
         ],
       ),
+      floatingActionButton:
+          _showScrollToTop
+              ? FloatingActionButton(
+                mini: true,
+                backgroundColor: AppColors.primaryColor.withOpacity(0.9),
+                child: const Icon(Icons.keyboard_arrow_up, color: Colors.white),
+                onPressed: () {
+                  _scrollController.animateTo(
+                    0,
+                    duration: const Duration(milliseconds: 500),
+                    curve: Curves.easeInOut,
+                  );
+                },
+              )
+              : null,
+    );
+  }
+
+  PreferredSizeWidget _buildAppBar() {
+    return AppBar(
+      automaticallyImplyLeading: false,
+      title: AnimatedCrossFade(
+        firstChild: const Text(
+          'Loca',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 28,
+            fontFamily: 'serif',
+            color: Colors.black,
+          ),
+        ),
+        secondChild: _buildSearchBar(),
+        crossFadeState:
+            _currentIndex == 0
+                ? CrossFadeState.showFirst
+                : CrossFadeState.showSecond,
+        duration: const Duration(milliseconds: 300),
+      ),
+      centerTitle: false,
+      backgroundColor: Colors.white,
+      elevation: 0.5,
+      actions: [
+        IconButton(
+          icon: const Icon(Icons.search, color: Colors.black87),
+          onPressed: () => _showSearch(),
+        ),
+        IconButton(
+          icon: const Icon(Icons.notifications_outlined, color: Colors.black87),
+          onPressed: () {},
+        ),
+        PopupMenuButton<String>(
+          onSelected: (value) {
+            if (value == 'logout') {
+              Navigator.of(context).pushReplacementNamed(AppRouter.auth);
+            }
+          },
+          itemBuilder:
+              (context) => [
+                const PopupMenuItem(
+                  value: 'logout',
+                  child: Row(
+                    children: [
+                      Icon(Icons.logout, color: Colors.grey),
+                      SizedBox(width: 8),
+                      Text('Déconnexion'),
+                    ],
+                  ),
+                ),
+              ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSearchBar() {
+    return Container(
+      height: 40,
+      decoration: BoxDecoration(
+        color: Colors.grey[100],
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: const TextField(
+        decoration: InputDecoration(
+          hintText: 'Rechercher un plat...',
+          prefixIcon: Icon(Icons.search),
+          border: InputBorder.none,
+          contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        ),
+      ),
+    );
+  }
+
+  void _showSearch() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder:
+          (context) => DraggableScrollableSheet(
+            initialChildSize: 0.9,
+            minChildSize: 0.5,
+            maxChildSize: 0.95,
+            builder:
+                (_, controller) => Container(
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.vertical(
+                      top: Radius.circular(20),
+                    ),
+                  ),
+                  child: Column(
+                    children: [
+                      Container(
+                        margin: const EdgeInsets.all(8),
+                        height: 4,
+                        width: 40,
+                        decoration: BoxDecoration(
+                          color: Colors.grey[300],
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                      // ... search implementation ...
+                    ],
+                  ),
+                ),
+          ),
     );
   }
 
   Widget _buildHomeContent() {
-    return ListView(
-      padding: const EdgeInsets.all(16),
-      children: [
-        _buildCategories(),
-        const SizedBox(height: 24),
-        _buildFeaturedLaoka(),
-        const Divider(height: 32),
-        _buildTrendingSection(),
-        const Divider(height: 32),
-        _buildNewRecipes(),
-        const Divider(height: 32),
-        _buildPopularChefs(),
-        const Divider(height: 32),
-        _buildRecommendedSection(),
-        const Divider(height: 32),
-        _buildRegionalSpecialties(),
-      ],
+    return RefreshIndicator(
+      onRefresh: () async {
+        await Future.delayed(const Duration(seconds: 1));
+      },
+      child: ListView(
+        controller: _scrollController,
+        padding: const EdgeInsets.all(16),
+        children: [
+          _buildStories(),
+          const SizedBox(height: 24),
+          _buildCategories(),
+          const SizedBox(height: 24),
+          _buildFeaturedLaoka(),
+          const Divider(height: 32),
+          _buildTrendingSection(),
+          const Divider(height: 32),
+          _buildNewRecipes(),
+          const Divider(height: 32),
+          _buildPopularChefs(),
+          const Divider(height: 32),
+          _buildRecommendedSection(),
+          const Divider(height: 32),
+          _buildRegionalSpecialties(),
+        ],
+      ),
     );
+  }
+
+  Widget _buildStories() {
+    return SizedBox(
+      height: 100,
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        itemCount: 6,
+        itemBuilder: (context, index) {
+          return Container(
+            width: 70,
+            margin: const EdgeInsets.only(right: 12),
+            child: Column(
+              children: [
+                Container(
+                  width: 70,
+                  height: 70,
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Colors.purple, Colors.orange],
+                    ),
+                    borderRadius: BorderRadius.circular(35),
+                  ),
+                  padding: const EdgeInsets.all(2),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(34),
+                    ),
+                    padding: const EdgeInsets.all(2),
+                    child: CircleAvatar(
+                      backgroundImage: NetworkImage(
+                        'https://via.placeholder.com/70',
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Story ${index + 1}',
+                  style: const TextStyle(fontSize: 12),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildPublishContent() {
+    return Container();
+  }
+
+  Widget _buildSettingsContent() {
+    return Container();
   }
 
   Widget _buildCategories() {
