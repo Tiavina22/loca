@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:loca/core/routes/app_router.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../post/presentation/pages/post_page.dart';
+import '../../../settings/presentation/pages/settings_page.dart';
 import 'dart:math';
 
 class HomePage extends StatefulWidget {
@@ -41,11 +43,7 @@ class _HomePageState extends State<HomePage> {
       appBar: _buildAppBar(),
       body: IndexedStack(
         index: _currentIndex,
-        children: [
-          _buildHomeContent(),
-          _buildPublishContent(),
-          _buildSettingsContent(),
-        ],
+        children: [_buildHomeContent(), const PostPage(), const SettingsPage()],
       ),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _currentIndex,
@@ -93,22 +91,14 @@ class _HomePageState extends State<HomePage> {
   PreferredSizeWidget _buildAppBar() {
     return AppBar(
       automaticallyImplyLeading: false,
-      title: AnimatedCrossFade(
-        firstChild: const Text(
-          'Loca',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 28,
-            fontFamily: 'serif',
-            color: Colors.black,
-          ),
+      title: Text(
+        'Loca',
+        style: const TextStyle(
+          fontWeight: FontWeight.bold,
+          fontSize: 28,
+          fontFamily: 'serif',
+          color: Colors.black,
         ),
-        secondChild: _buildSearchBar(),
-        crossFadeState:
-            _currentIndex == 0
-                ? CrossFadeState.showFirst
-                : CrossFadeState.showSecond,
-        duration: const Duration(milliseconds: 300),
       ),
       centerTitle: false,
       backgroundColor: Colors.white,
@@ -146,24 +136,6 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildSearchBar() {
-    return Container(
-      height: 40,
-      decoration: BoxDecoration(
-        color: Colors.grey[100],
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: const TextField(
-        decoration: InputDecoration(
-          hintText: 'Rechercher un plat...',
-          prefixIcon: Icon(Icons.search),
-          border: InputBorder.none,
-          contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        ),
-      ),
-    );
-  }
-
   void _showSearch() {
     showModalBottomSheet(
       context: context,
@@ -182,10 +154,11 @@ class _HomePageState extends State<HomePage> {
                       top: Radius.circular(20),
                     ),
                   ),
+                  padding: const EdgeInsets.all(16),
                   child: Column(
                     children: [
                       Container(
-                        margin: const EdgeInsets.all(8),
+                        margin: const EdgeInsets.only(bottom: 16),
                         height: 4,
                         width: 40,
                         decoration: BoxDecoration(
@@ -193,7 +166,23 @@ class _HomePageState extends State<HomePage> {
                           borderRadius: BorderRadius.circular(2),
                         ),
                       ),
-                      // ... search implementation ...
+                      TextField(
+                        autofocus: true,
+                        decoration: InputDecoration(
+                          hintText: 'Rechercher un plat...',
+                          prefixIcon: const Icon(Icons.search),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          filled: true,
+                          fillColor: Colors.grey[100],
+                        ),
+                      ),
+                      const Expanded(
+                        child: Center(
+                          child: Text('Résultats de recherche à venir...'),
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -278,14 +267,6 @@ class _HomePageState extends State<HomePage> {
         },
       ),
     );
-  }
-
-  Widget _buildPublishContent() {
-    return Container();
-  }
-
-  Widget _buildSettingsContent() {
-    return Container();
   }
 
   Widget _buildCategories() {
